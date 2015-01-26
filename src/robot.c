@@ -45,8 +45,8 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 
-
 static int shoulder = 0, elbow = 0;
+static GLenum animate = GL_FALSE;
 
 void init(void) 
 {
@@ -106,6 +106,12 @@ void keyboard (unsigned char key, int x, int y)
          break;
       case 'E':
          elbow = (elbow - 5) % 360;
+         glutPostRedisplay();
+         break;
+      case 'm':
+         glutPostRedisplay();
+         break;
+      case 'M':
          glutPostRedisplay();
          break;
       case 27:
