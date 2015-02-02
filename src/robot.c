@@ -43,6 +43,7 @@
  * alters the rotation of the robot arm.
  */
 #include <stdlib.h>
+#include <time.h>
 #include <math.h>
 #include <GL/glut.h>
 
@@ -50,7 +51,8 @@
 #define RAD2DEG(x) x*(180/M_PI)
 
 static int shoulder = 0, elbow = 0;
-static GLenum animateWave = GL_FALSE;
+static int interval = 50; // Animation update interval
+static GLenum animateWave = GL_FALSE; // Flag for toggling animation
 
 
 void init(void) 
@@ -59,6 +61,12 @@ void init(void)
    glShadeModel (GL_FLAT);
 }
 
+GLfloat lerp(GLfloat x, GLfloat y, GLfloat weight)
+{
+  return x * (1. - weight) + y * weight;
+}
+
+// Implement naive IK
 void calcIK(GLfloat x, GLfloat y, GLfloat *theta1, GLfloat *theta2)
 {
   GLfloat thetaR = acos(x /(sqrt(pow(x, 2.) + pow(y, 2.))));
@@ -73,18 +81,27 @@ void calcIK(GLfloat x, GLfloat y, GLfloat *theta1, GLfloat *theta2)
   *theta2 = RAD2DEG(*theta2);
 }
 
-//Animate wave from (0.5,2.5) to (2.,2.)
-// +1 to x for offset
+// Animation loop
 void doAnimation(int value)
 {
   if (animateWave == GL_FALSE)
     return;
+
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+
   GLfloat theta1, theta2;
-  calcIK(1.5, 2.5, &theta1, &theta2);
+  GLfloat t = fabs(sin(ms/500.));
+  GLfloat x_interp = lerp(1.5, 2.5, t);
+  GLfloat y_interp = lerp(2.5, 2., t);
+
+  calcIK(x_interp, y_interp, &theta1, &theta2);
   shoulder = theta1;
   elbow = theta2;
   glutPostRedisplay();
-  glutTimerFunc(500, doAnimation, 0);
+
+  glutTimerFunc(interval, doAnimation, 0);
 }
 
 void display(void)
@@ -146,14 +163,13 @@ void keyboard (unsigned char key, int x, int y)
          glutPostRedisplay();
          break;
       case 'm':
-         animateWave = GL_TRUE;
-         doAnimation(0);
-         glutPostRedisplay();
-         break;
       case 'M':
-         animateWave = GL_TRUE;
-         doAnimation(0);
-         glutPostRedisplay();
+         if (!animateWave)
+         {
+            animateWave = GL_TRUE;
+            doAnimation(0);
+            glutPostRedisplay();
+         }
          break;
       case 27:
          exit(0);
@@ -174,7 +190,6 @@ int main(int argc, char** argv)
    glutDisplayFunc(display); 
    glutReshapeFunc(reshape);
    glutKeyboardFunc(keyboard);
-   glutTimerFunc(500, doAnimation, 0);
    glutMainLoop();
    return 0;
 }
