@@ -82,7 +82,7 @@ void calcIK(GLfloat x, GLfloat y, GLfloat *theta1, GLfloat *theta2)
 }
 
 // Animation loop
-void doAnimation(int value)
+void loopAnimation(int value)
 {
   if (animateWave == GL_FALSE)
     return;
@@ -101,7 +101,18 @@ void doAnimation(int value)
   elbow = theta2;
   glutPostRedisplay();
 
-  glutTimerFunc(interval, doAnimation, 0);
+  glutTimerFunc(interval, loopAnimation, 0);
+}
+
+void startAnimation()
+{
+  animateWave = GL_TRUE;
+  loopAnimation(0);
+}
+
+void stopAnimation()
+{
+  animateWave = GL_FALSE;
 }
 
 void display(void)
@@ -143,33 +154,29 @@ void keyboard (unsigned char key, int x, int y)
 {
    switch (key) {
       case 's':
-         animateWave = GL_FALSE;
+         stopAnimation();
          shoulder = (shoulder + 5) % 360;
          glutPostRedisplay();
          break;
       case 'S':
-         animateWave = GL_FALSE;
+         stopAnimation();
          shoulder = (shoulder - 5) % 360;
          glutPostRedisplay();
          break;
       case 'e':
-         animateWave = GL_FALSE;
+         stopAnimation();
          elbow = (elbow + 5) % 360;
          glutPostRedisplay();
          break;
       case 'E':
-         animateWave = GL_FALSE;
+         stopAnimation();
          elbow = (elbow - 5) % 360;
          glutPostRedisplay();
          break;
       case 'm':
       case 'M':
          if (!animateWave)
-         {
-            animateWave = GL_TRUE;
-            doAnimation(0);
-            glutPostRedisplay();
-         }
+            startAnimation();
          break;
       case 27:
          exit(0);
