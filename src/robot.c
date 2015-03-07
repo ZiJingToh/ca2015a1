@@ -42,10 +42,17 @@
  * Interaction:  pressing the s and e keys (shoulder and elbow)
  * alters the rotation of the robot arm.
  */
+#define _USE_MATH_DEFINES
+
 #include <stdlib.h>
-#include <time.h>
 #include <math.h>
 #include <GL/glut.h>
+
+#ifdef _WIN32
+  #include <windows.h>
+#else
+  #include <time.h>
+#endif
 
 #define DEG2RAD(x) x*(M_PI/180)
 #define RAD2DEG(x) x*(180/M_PI)
@@ -84,17 +91,29 @@ void calcIK(GLfloat x, GLfloat y, GLfloat *theta1, GLfloat *theta2)
 // Animation loop
 void loopAnimation(int value)
 {
+#ifdef _WIN32
+  SYSTEMTIME time;
+#else
+  struct timeval tp;
+#endif
+
+  long int ms;
+  GLfloat theta1, theta2, t, x_interp, y_interp;
+
   if (animateWave == GL_FALSE)
     return;
 
-  struct timeval tp;
+#ifdef _WIN32
+  GetSystemTime(&time);
+  ms = (time.wSecond * 1000) + time.wMilliseconds;
+#else
   gettimeofday(&tp, NULL);
-  long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+  ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+#endif
 
-  GLfloat theta1, theta2;
-  GLfloat t = fabs(sin(ms/500.));
-  GLfloat x_interp = lerp(1.5, 2.5, t);
-  GLfloat y_interp = lerp(2.5, 2., t);
+  t = fabs(sin(ms/500.));
+  x_interp = lerp(1.5, 2.5, t);
+  y_interp = lerp(2.5, 2., t);
 
   calcIK(x_interp, y_interp, &theta1, &theta2);
   shoulder = theta1;
